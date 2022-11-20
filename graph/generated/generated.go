@@ -55,6 +55,8 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
+		BulkIngredient   func(childComplexity int, input []*model.NewIngredient) int
+		BulkRecipe       func(childComplexity int, input []*model.NewRecipe) int
 		CreateIngredient func(childComplexity int, input model.NewIngredient) int
 		CreateRecipe     func(childComplexity int, input model.NewRecipe) int
 		DeleteIngredient func(childComplexity int, filter map[string]interface{}) int
@@ -89,9 +91,11 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	CreateIngredient(ctx context.Context, input model.NewIngredient) (*model.Ingredient, error)
+	BulkIngredient(ctx context.Context, input []*model.NewIngredient) (bool, error)
 	UpdateIngredient(ctx context.Context, input *model.UpdateIngredient) (*model.Ingredient, error)
 	DeleteIngredient(ctx context.Context, filter map[string]interface{}) (bool, error)
 	CreateRecipe(ctx context.Context, input model.NewRecipe) (*model.Recipe, error)
+	BulkRecipe(ctx context.Context, input []*model.NewRecipe) (bool, error)
 	UpdateRecipe(ctx context.Context, input model.UpdateRecipe) (*model.Recipe, error)
 	DeleteRecipe(ctx context.Context, filter map[string]interface{}) (bool, error)
 }
@@ -155,6 +159,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Ingredient.Type(childComplexity), true
+
+	case "Mutation.bulkIngredient":
+		if e.complexity.Mutation.BulkIngredient == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_bulkIngredient_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.BulkIngredient(childComplexity, args["input"].([]*model.NewIngredient)), true
+
+	case "Mutation.bulkRecipe":
+		if e.complexity.Mutation.BulkRecipe == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_bulkRecipe_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.BulkRecipe(childComplexity, args["input"].([]*model.NewRecipe)), true
 
 	case "Mutation.createIngredient":
 		if e.complexity.Mutation.CreateIngredient == nil {
@@ -502,12 +530,15 @@ union SearchRecipeResult = Recipe | Ingredient
 
 type Mutation {
   createIngredient(input: NewIngredient!): Ingredient!
+  bulkIngredient(input: [NewIngredient!]!): Boolean!
   updateIngredient(input: UpdateIngredient): Ingredient!
   deleteIngredient(filter: Map!): Boolean!
 
   createRecipe(input: NewRecipe!): Recipe!
+  bulkRecipe(input: [NewRecipe!]!): Boolean!
   updateRecipe(input: UpdateRecipe!): Recipe!
   deleteRecipe(filter: Map!): Boolean!
+  
 }
 
 type Query {
@@ -529,6 +560,36 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_bulkIngredient_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []*model.NewIngredient
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNNewIngredient2ᚕᚖgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐNewIngredientᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_bulkRecipe_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []*model.NewRecipe
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNNewRecipe2ᚕᚖgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐNewRecipeᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_createIngredient_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -1086,6 +1147,61 @@ func (ec *executionContext) fieldContext_Mutation_createIngredient(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_bulkIngredient(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_bulkIngredient(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().BulkIngredient(rctx, fc.Args["input"].([]*model.NewIngredient))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_bulkIngredient(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_bulkIngredient_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_updateIngredient(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_updateIngredient(ctx, field)
 	if err != nil {
@@ -1275,6 +1391,61 @@ func (ec *executionContext) fieldContext_Mutation_createRecipe(ctx context.Conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_createRecipe_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_bulkRecipe(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_bulkRecipe(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().BulkRecipe(rctx, fc.Args["input"].([]*model.NewRecipe))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_bulkRecipe(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_bulkRecipe_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -4441,6 +4612,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "bulkIngredient":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_bulkIngredient(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "updateIngredient":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -4463,6 +4643,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createRecipe(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "bulkRecipe":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_bulkRecipe(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -5214,6 +5403,28 @@ func (ec *executionContext) unmarshalNNewIngredient2ᚖgithubᚗcomᚋottolaunch
 func (ec *executionContext) unmarshalNNewRecipe2githubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐNewRecipe(ctx context.Context, v interface{}) (model.NewRecipe, error) {
 	res, err := ec.unmarshalInputNewRecipe(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNNewRecipe2ᚕᚖgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐNewRecipeᚄ(ctx context.Context, v interface{}) ([]*model.NewRecipe, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.NewRecipe, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNNewRecipe2ᚖgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐNewRecipe(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNNewRecipe2ᚖgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐNewRecipe(ctx context.Context, v interface{}) (*model.NewRecipe, error) {
+	res, err := ec.unmarshalInputNewRecipe(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNRecipe2githubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐRecipe(ctx context.Context, sel ast.SelectionSet, v model.Recipe) graphql.Marshaler {

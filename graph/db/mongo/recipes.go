@@ -16,6 +16,7 @@ import (
 
 type IRecipe interface {
 	Create(ctx context.Context, args *model.NewRecipe) (*model.Recipe, error)
+	Bulk(ctx context.Context, args []*model.NewRecipe) error
 	Update(ctx context.Context, args *model.UpdateRecipe) (*model.Recipe, error)
 	Delete(ctx context.Context, filter map[string]interface{}) error
 	Get(ctx context.Context, filter map[string]interface{}) (*model.Recipe, error)
@@ -30,6 +31,64 @@ type RecipeManager struct {
 func NewRecipeManager(d *mongo.Database) *RecipeManager {
 	recipes := d.Collection("recipes")
 	return &RecipeManager{Col: recipes}
+}
+
+func (tm *RecipeManager) Bulk(ctx context.Context, args []*model.NewRecipe) error {
+	l, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
+	defer cancel()
+
+	var recipes []*model.Recipe
+
+	for _, arg := range args {
+		slug := text.Slugify(arg.Name)
+
+		var (
+			timers      []*string
+			steps       []*string
+			ingredients []*model.Ingredient
+		)
+
+		for _, t := range arg.Timers {
+			timers = append(timers, &t)
+		}
+
+		for _, s := range arg.Steps {
+			steps = append(steps, &s)
+		}
+
+		for _, i := range arg.Ingredients {
+			slg := text.Slugify(i.Name)
+			ingredients = append(ingredients, &model.Ingredient{
+				Name:     arg.Name,
+				Slug:     &slg,
+				Type:     i.Type,
+				Quantity: i.Quantity,
+			})
+		}
+
+		recipe := model.Recipe{
+			Name:        arg.Name,
+			Slug:        &slug,
+			Timers:      timers,
+			Steps:       steps,
+			ImageURL:    arg.ImageURL,
+			OriginalURL: &arg.OriginalURL,
+			Ingredients: ingredients,
+		}
+		recipes = append(recipes, &recipe)
+	}
+
+	src := make([]interface{}, len(recipes))
+	for i := range recipes {
+		src = append(src, i)
+	}
+	_, err := tm.Col.InsertMany(l, src)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
 func (tm *RecipeManager) Create(ctx context.Context, args *model.NewRecipe) (*model.Recipe, error) {

@@ -16,6 +16,7 @@ import (
 
 type Ingredient interface {
 	Create(ctx context.Context, args *model.NewIngredient) (*model.Ingredient, error)
+	Bulk(ctx context.Context, args []*model.NewIngredient) error
 	Update(ctx context.Context, args *model.UpdateIngredient) (*model.Ingredient, error)
 	Delete(ctx context.Context, filter map[string]interface{}) error
 	Get(ctx context.Context, filter map[string]interface{}) (*model.Ingredient, error)
@@ -32,23 +33,52 @@ func NewIngredientManager(d *mongo.Database) *IngredientManager {
 	return &IngredientManager{Col: ingredients}
 }
 
+func (im *IngredientManager) Bulk(ctx context.Context, args []*model.NewIngredient) error {
+	l, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
+	defer cancel()
+
+	var ingredients []*model.Ingredient
+	for _, args := range args {
+		slug := text.Slugify(args.Name)
+
+		ingredient := model.Ingredient{
+			Name:     args.Name,
+			Slug:     &slug,
+			Type:     args.Type,
+			Quantity: args.Quantity,
+		}
+
+		ingredients = append(ingredients, &ingredient)
+
+	}
+	src := make([]interface{}, len(ingredients))
+	for i := range ingredients {
+		src = append(src, i)
+	}
+	_, err := im.Col.InsertMany(l, src)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 func (tm *IngredientManager) Create(ctx context.Context, args *model.NewIngredient) (*model.Ingredient, error) {
 	l, cancel := context.WithTimeout(ctx, 350*time.Millisecond)
 	defer cancel()
 	slug := text.Slugify(args.Name)
 
-	Ingredient := model.Ingredient{
+	ingredient := model.Ingredient{
 		Name:     args.Name,
 		Slug:     &slug,
 		Type:     args.Type,
 		Quantity: args.Quantity,
 	}
-	res, err := tm.Col.InsertOne(l, Ingredient)
+	res, err := tm.Col.InsertOne(l, ingredient)
 	if err != nil {
 		return nil, err
 	}
-	Ingredient.ID = res.InsertedID.(primitive.ObjectID).Hex()
-	return &Ingredient, nil
+	ingredient.ID = res.InsertedID.(primitive.ObjectID).Hex()
+	return &ingredient, nil
 }
 
 func (tm *IngredientManager) Update(ctx context.Context, args *model.UpdateIngredient) (*model.Ingredient, error) {
@@ -56,18 +86,18 @@ func (tm *IngredientManager) Update(ctx context.Context, args *model.UpdateIngre
 	defer cancel()
 	slug := text.Slugify(args.Name)
 
-	Ingredient := model.Ingredient{
+	ingredient := model.Ingredient{
 		Name:     args.Name,
 		Slug:     &slug,
 		Type:     args.Type,
 		Quantity: args.Quantity,
 	}
-	res, err := tm.Col.UpdateByID(l, args.ID, Ingredient)
+	res, err := tm.Col.UpdateByID(l, args.ID, ingredient)
 	if err != nil {
 		return nil, err
 	}
-	Ingredient.ID = res.UpsertedID.(primitive.ObjectID).Hex()
-	return &Ingredient, nil
+	ingredient.ID = res.UpsertedID.(primitive.ObjectID).Hex()
+	return &ingredient, nil
 }
 
 func (tm *IngredientManager) Delete(ctx context.Context, filter map[string]interface{}) error {
@@ -97,12 +127,12 @@ func (tm *IngredientManager) Get(ctx context.Context, filter map[string]interfac
 	l, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
 	defer cancel()
 
-	var Ingredient model.Ingredient
-	err := tm.Col.FindOne(l, filter, opts).Decode(&Ingredient)
+	var ingredient model.Ingredient
+	err := tm.Col.FindOne(l, filter, opts).Decode(&ingredient)
 	if err != nil {
 		return nil, err
 	}
-	return &Ingredient, nil
+	return &ingredient, nil
 
 }
 
@@ -119,24 +149,24 @@ func (tm *IngredientManager) All(ctx context.Context, filter map[string]interfac
 	}
 	opts.SetLimit(int64(limit))
 
-	var Ingredients []*model.Ingredient
+	var ingredients []*model.Ingredient
 	cur, err := tm.Col.Find(l, filter, &opts)
 
 	if err != nil {
 		return nil, err
 	}
-	if err := cur.All(l, &Ingredients); err != nil {
+	if err := cur.All(l, &ingredients); err != nil {
 		return nil, err
 	}
 
 	if err := cur.Err(); err != nil {
-		return Ingredients, nil
+		return ingredients, nil
 	}
 	_ = cur.Close(l)
-	if len(Ingredients) == 0 {
-		return Ingredients, mongo.ErrNoDocuments
+	if len(ingredients) == 0 {
+		return ingredients, mongo.ErrNoDocuments
 	}
-	return Ingredients, nil
+	return ingredients, nil
 }
 
 func (tm *IngredientManager) Search(ctx context.Context, query string, limit int, page int) ([]*model.Ingredient, error) {
@@ -157,22 +187,22 @@ func (tm *IngredientManager) Search(ctx context.Context, query string, limit int
 		},
 	}
 
-	var Ingredients []*model.Ingredient
+	var ingredients []*model.Ingredient
 	cur, err := tm.Col.Find(l, search, &opts)
 
 	if err != nil {
 		return nil, err
 	}
-	if err := cur.All(l, &Ingredients); err != nil {
+	if err := cur.All(l, &ingredients); err != nil {
 		return nil, err
 	}
 
 	if err := cur.Err(); err != nil {
-		return Ingredients, nil
+		return ingredients, nil
 	}
 	_ = cur.Close(l)
-	if len(Ingredients) == 0 {
-		return Ingredients, mongo.ErrNoDocuments
+	if len(ingredients) == 0 {
+		return ingredients, mongo.ErrNoDocuments
 	}
-	return Ingredients, nil
+	return ingredients, nil
 }
