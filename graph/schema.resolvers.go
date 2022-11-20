@@ -23,7 +23,10 @@ func (r *mutationResolver) CreateIngredient(ctx context.Context, input model.New
 
 // BulkIngredient is the resolver for the bulkIngredient field.
 func (r *mutationResolver) BulkIngredient(ctx context.Context, input []*model.NewIngredient) (bool, error) {
-	panic(fmt.Errorf("not implemented: BulkIngredient - bulkIngredient"))
+	if err := r.IM.Bulk(ctx, input); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // UpdateIngredient is the resolver for the updateIngredient field.
@@ -54,7 +57,10 @@ func (r *mutationResolver) CreateRecipe(ctx context.Context, input model.NewReci
 
 // BulkRecipe is the resolver for the bulkRecipe field.
 func (r *mutationResolver) BulkRecipe(ctx context.Context, input []*model.NewRecipe) (bool, error) {
-	panic(fmt.Errorf("not implemented: BulkRecipe - bulkRecipe"))
+	if err := r.RM.Bulk(ctx, input); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // UpdateRecipe is the resolver for the updateRecipe field.
