@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ottolauncher/recipes/graph/model"
 	"github.com/ottolauncher/recipes/preloads"
 	"github.com/ottolauncher/recipes/utils/text"
 	"go.mongodb.org/mongo-driver/bson"
@@ -14,8 +15,8 @@ import (
 )
 
 type Ingredient interface {
-	Create(ctx context.Context, args model.Ingredient) (*model.Ingredient, error)
-	Update(ctx context.Context, args model.Ingredient) (*model.Ingredient, error)
+	Create(ctx context.Context, args model.NewIngredient) (*model.Ingredient, error)
+	Update(ctx context.Context, args model.UpdateIngredient) (*model.Ingredient, error)
 	Delete(ctx context.Context, filter map[string]interface{}) error
 	Get(ctx context.Context, filter map[string]interface{}) (*model.Ingredient, error)
 	All(ctx context.Context, filter map[string]interface{}, limit int, page int) ([]*model.Ingredient, error)
@@ -38,8 +39,7 @@ func (tm *IngredientManager) Create(ctx context.Context, args model.Ingredient) 
 
 	Ingredient := model.Ingredient{
 		Name:     args.Name,
-		Note:     args.Name,
-		Slug:     slug,
+		Slug:     &slug,
 		Type:     args.Type,
 		Quantity: args.Quantity,
 	}
@@ -58,8 +58,7 @@ func (tm *IngredientManager) Update(ctx context.Context, args model.Ingredient) 
 
 	Ingredient := model.Ingredient{
 		Name:     args.Name,
-		Note:     args.Name,
-		Slug:     slug,
+		Slug:     &slug,
 		Type:     args.Type,
 		Quantity: args.Quantity,
 	}

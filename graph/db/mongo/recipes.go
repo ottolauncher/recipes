@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ottolauncher/recipes/graph/model"
 	"github.com/ottolauncher/recipes/preloads"
 	"github.com/ottolauncher/recipes/utils/text"
 	"go.mongodb.org/mongo-driver/bson"
@@ -14,8 +15,8 @@ import (
 )
 
 type IRecipe interface {
-	Create(ctx context.Context, args model.Recipe) (*model.Recipe, error)
-	Update(ctx context.Context, args model.Recipe) (*model.Recipe, error)
+	Create(ctx context.Context, args model.NewRecipe) (*model.Recipe, error)
+	Update(ctx context.Context, args model.UpdateRecipe) (*model.Recipe, error)
 	Delete(ctx context.Context, filter map[string]interface{}) error
 	Get(ctx context.Context, filter map[string]interface{}) (*model.Recipe, error)
 	All(ctx context.Context, filter map[string]interface{}, limit int, page int) ([]*model.Recipe, error)
@@ -31,20 +32,19 @@ func NewRecipeManager(d *mongo.Database) *RecipeManager {
 	return &RecipeManager{Col: recipes}
 }
 
-func (tm *RecipeManager) Create(ctx context.Context, args model.Recipe) (*model.Recipe, error) {
+func (tm *RecipeManager) Create(ctx context.Context, args model.NewRecipe) (*model.Recipe, error) {
 	l, cancel := context.WithTimeout(ctx, 350*time.Millisecond)
 	defer cancel()
 	slug := text.Slugify(args.Name)
 
 	Recipe := model.Recipe{
 		Name:        args.Name,
-		Note:        args.Name,
-		Slug:        slug,
+		Slug:        &slug,
 		Times:       args.Timers,
 		Steps:       args.Steps,
-		ImageURL:    args.ImageURL,
-		OriginalURL: args.OriginalURL,
-		Ingredients: args.Ingredients,
+		ImageURL:    &args.ImageURL,
+		OriginalURL: &args.OriginalURL,
+		Ingredients: ingredients,
 	}
 	res, err := tm.Col.InsertOne(l, Recipe)
 	if err != nil {
