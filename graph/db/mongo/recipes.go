@@ -37,12 +37,18 @@ func (tm *RecipeManager) Create(ctx context.Context, args model.NewRecipe) (*mod
 	defer cancel()
 	slug := text.Slugify(args.Name)
 
+	var (
+		timers      []*string
+		steps       []*string
+		ingredients []*model.Ingredient
+	)
+
 	Recipe := model.Recipe{
 		Name:        args.Name,
 		Slug:        &slug,
-		Times:       args.Timers,
-		Steps:       args.Steps,
-		ImageURL:    &args.ImageURL,
+		Timers:      timers,
+		Steps:       steps,
+		ImageURL:    args.ImageURL,
 		OriginalURL: &args.OriginalURL,
 		Ingredients: ingredients,
 	}
@@ -54,20 +60,25 @@ func (tm *RecipeManager) Create(ctx context.Context, args model.NewRecipe) (*mod
 	return &Recipe, nil
 }
 
-func (tm *RecipeManager) Update(ctx context.Context, args model.Recipe) (*model.Recipe, error) {
+func (tm *RecipeManager) Update(ctx context.Context, args model.UpdateRecipe) (*model.Recipe, error) {
 	l, cancel := context.WithTimeout(ctx, 350*time.Millisecond)
 	defer cancel()
 	slug := text.Slugify(args.Name)
 
+	var (
+		timers      []*string
+		steps       []*string
+		ingredients []*model.Ingredient
+	)
+
 	Recipe := model.Recipe{
 		Name:        args.Name,
-		Note:        args.Name,
-		Slug:        slug,
-		Times:       args.Timers,
-		Steps:       args.Steps,
+		Slug:        &slug,
+		Timers:      timers,
+		Steps:       steps,
 		ImageURL:    args.ImageURL,
-		OriginalURL: args.OriginalURL,
-		Ingredients: args.Ingredients,
+		OriginalURL: &args.OriginalURL,
+		Ingredients: ingredients,
 	}
 
 	res, err := tm.Col.UpdateByID(l, args.ID, Recipe)
