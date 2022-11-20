@@ -75,7 +75,7 @@ type Query {
   recipe(filter: Map!): Recipe!
   recipes(filter: Map!, limit: Int=12, page:Int=1):[Recipe!]!
 
-  search(filter: Map!, limit: Int=12, page:Int=1):[SearchRecipeResult!]!
+  search(query: String!, limit: Int=12, page:Int=1):[SearchRecipeResult!]!
 }
 
 type Subscription {

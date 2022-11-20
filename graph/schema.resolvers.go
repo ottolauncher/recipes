@@ -13,57 +13,123 @@ import (
 
 // CreateIngredient is the resolver for the createIngredient field.
 func (r *mutationResolver) CreateIngredient(ctx context.Context, input model.NewIngredient) (*model.Ingredient, error) {
-	panic(fmt.Errorf("not implemented: CreateIngredient - createIngredient"))
+	res, err := r.IM.Create(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 // UpdateIngredient is the resolver for the updateIngredient field.
 func (r *mutationResolver) UpdateIngredient(ctx context.Context, input *model.UpdateIngredient) (*model.Ingredient, error) {
-	panic(fmt.Errorf("not implemented: UpdateIngredient - updateIngredient"))
+	res, err := r.IM.Update(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 // DeleteIngredient is the resolver for the deleteIngredient field.
 func (r *mutationResolver) DeleteIngredient(ctx context.Context, filter map[string]interface{}) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteIngredient - deleteIngredient"))
+	if err := r.IM.Delete(ctx, filter); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // CreateRecipe is the resolver for the createRecipe field.
 func (r *mutationResolver) CreateRecipe(ctx context.Context, input model.NewRecipe) (*model.Recipe, error) {
-	panic(fmt.Errorf("not implemented: CreateRecipe - createRecipe"))
+	res, err := r.RM.Create(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 // UpdateRecipe is the resolver for the updateRecipe field.
 func (r *mutationResolver) UpdateRecipe(ctx context.Context, input model.UpdateRecipe) (*model.Recipe, error) {
-	panic(fmt.Errorf("not implemented: UpdateRecipe - updateRecipe"))
+	res, err := r.RM.Update(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 // DeleteRecipe is the resolver for the deleteRecipe field.
 func (r *mutationResolver) DeleteRecipe(ctx context.Context, filter map[string]interface{}) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteRecipe - deleteRecipe"))
+	if err := r.RM.Delete(ctx, filter); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // Ingredient is the resolver for the ingredient field.
 func (r *queryResolver) Ingredient(ctx context.Context, filter map[string]interface{}) (*model.Ingredient, error) {
-	panic(fmt.Errorf("not implemented: Ingredient - ingredient"))
+	res, err := r.IM.Get(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 // Ingredients is the resolver for the ingredients field.
 func (r *queryResolver) Ingredients(ctx context.Context, filter map[string]interface{}, limit *int, page *int) ([]*model.Ingredient, error) {
-	panic(fmt.Errorf("not implemented: Ingredients - ingredients"))
+	res, err := r.IM.All(ctx, filter, *limit, *page)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 // Recipe is the resolver for the recipe field.
 func (r *queryResolver) Recipe(ctx context.Context, filter map[string]interface{}) (*model.Recipe, error) {
-	panic(fmt.Errorf("not implemented: Recipe - recipe"))
+	res, err := r.RM.Get(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 // Recipes is the resolver for the recipes field.
 func (r *queryResolver) Recipes(ctx context.Context, filter map[string]interface{}, limit *int, page *int) ([]*model.Recipe, error) {
-	panic(fmt.Errorf("not implemented: Recipes - recipes"))
+	res, err := r.RM.All(ctx, filter, *limit, *page)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 // Search is the resolver for the search field.
-func (r *queryResolver) Search(ctx context.Context, filter map[string]interface{}, limit *int, page *int) ([]model.SearchRecipeResult, error) {
-	panic(fmt.Errorf("not implemented: Search - search"))
+func (r *queryResolver) Search(ctx context.Context, query string, limit *int, page *int) ([]model.SearchRecipeResult, error) {
+	var (
+		res         []model.SearchRecipeResult
+		searchError []error
+	)
+
+	recipes, rerr := r.RM.Search(ctx, query, *limit, *page)
+	if rerr != nil {
+		searchError = append(searchError, rerr)
+	}
+
+	ingredients, ierr := r.IM.Search(ctx, query, *limit, *page)
+	if ierr != nil {
+		searchError = append(searchError, ierr)
+	}
+	if len(searchError) > 0 {
+		return nil, fmt.Errorf("%s", searchError)
+	}
+	if len(recipes) > 0 {
+		for _, rcp := range recipes {
+			res = append(res, rcp)
+		}
+	}
+
+	if len(ingredients) > 0 {
+		for _, i := range ingredients {
+			res = append(res, i)
+		}
+	}
+	return res, nil
 }
 
 // Recipe is the resolver for the recipe field.

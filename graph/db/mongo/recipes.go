@@ -15,12 +15,12 @@ import (
 )
 
 type IRecipe interface {
-	Create(ctx context.Context, args model.NewRecipe) (*model.Recipe, error)
-	Update(ctx context.Context, args model.UpdateRecipe) (*model.Recipe, error)
+	Create(ctx context.Context, args *model.NewRecipe) (*model.Recipe, error)
+	Update(ctx context.Context, args *model.UpdateRecipe) (*model.Recipe, error)
 	Delete(ctx context.Context, filter map[string]interface{}) error
 	Get(ctx context.Context, filter map[string]interface{}) (*model.Recipe, error)
 	All(ctx context.Context, filter map[string]interface{}, limit int, page int) ([]*model.Recipe, error)
-	Search(ctx context.Context, query string, filter map[string]interface{}, limit int, page int) ([]*model.Recipe, error)
+	Search(ctx context.Context, query string, limit int, page int) ([]*model.Recipe, error)
 }
 
 type RecipeManager struct {
@@ -32,7 +32,7 @@ func NewRecipeManager(d *mongo.Database) *RecipeManager {
 	return &RecipeManager{Col: recipes}
 }
 
-func (tm *RecipeManager) Create(ctx context.Context, args model.NewRecipe) (*model.Recipe, error) {
+func (tm *RecipeManager) Create(ctx context.Context, args *model.NewRecipe) (*model.Recipe, error) {
 	l, cancel := context.WithTimeout(ctx, 350*time.Millisecond)
 	defer cancel()
 	slug := text.Slugify(args.Name)
@@ -78,7 +78,7 @@ func (tm *RecipeManager) Create(ctx context.Context, args model.NewRecipe) (*mod
 	return &Recipe, nil
 }
 
-func (tm *RecipeManager) Update(ctx context.Context, args model.UpdateRecipe) (*model.Recipe, error) {
+func (tm *RecipeManager) Update(ctx context.Context, args *model.UpdateRecipe) (*model.Recipe, error) {
 	l, cancel := context.WithTimeout(ctx, 350*time.Millisecond)
 	defer cancel()
 	slug := text.Slugify(args.Name)
@@ -193,7 +193,7 @@ func (tm *RecipeManager) All(ctx context.Context, filter map[string]interface{},
 	return Recipes, nil
 }
 
-func (tm *RecipeManager) Search(ctx context.Context, query string, filter map[string]interface{}, limit int, page int) ([]*model.Recipe, error) {
+func (tm *RecipeManager) Search(ctx context.Context, query string, limit int, page int) ([]*model.Recipe, error) {
 	l, cancel := context.WithTimeout(ctx, 1000*time.Millisecond)
 	defer cancel()
 	load := preloads.GetPreloads(ctx)

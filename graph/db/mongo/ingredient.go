@@ -15,12 +15,12 @@ import (
 )
 
 type Ingredient interface {
-	Create(ctx context.Context, args model.NewIngredient) (*model.Ingredient, error)
-	Update(ctx context.Context, args model.UpdateIngredient) (*model.Ingredient, error)
+	Create(ctx context.Context, args *model.NewIngredient) (*model.Ingredient, error)
+	Update(ctx context.Context, args *model.UpdateIngredient) (*model.Ingredient, error)
 	Delete(ctx context.Context, filter map[string]interface{}) error
 	Get(ctx context.Context, filter map[string]interface{}) (*model.Ingredient, error)
 	All(ctx context.Context, filter map[string]interface{}, limit int, page int) ([]*model.Ingredient, error)
-	Search(ctx context.Context, query string, filter map[string]interface{}, limit int, page int) ([]*model.Ingredient, error)
+	Search(ctx context.Context, query string, limit int, page int) ([]*model.Ingredient, error)
 }
 
 type IngredientManager struct {
@@ -32,7 +32,7 @@ func NewIngredientManager(d *mongo.Database) *IngredientManager {
 	return &IngredientManager{Col: ingredients}
 }
 
-func (tm *IngredientManager) Create(ctx context.Context, args model.Ingredient) (*model.Ingredient, error) {
+func (tm *IngredientManager) Create(ctx context.Context, args *model.NewIngredient) (*model.Ingredient, error) {
 	l, cancel := context.WithTimeout(ctx, 350*time.Millisecond)
 	defer cancel()
 	slug := text.Slugify(args.Name)
@@ -51,7 +51,7 @@ func (tm *IngredientManager) Create(ctx context.Context, args model.Ingredient) 
 	return &Ingredient, nil
 }
 
-func (tm *IngredientManager) Update(ctx context.Context, args model.Ingredient) (*model.Ingredient, error) {
+func (tm *IngredientManager) Update(ctx context.Context, args *model.UpdateIngredient) (*model.Ingredient, error) {
 	l, cancel := context.WithTimeout(ctx, 350*time.Millisecond)
 	defer cancel()
 	slug := text.Slugify(args.Name)
@@ -139,7 +139,7 @@ func (tm *IngredientManager) All(ctx context.Context, filter map[string]interfac
 	return Ingredients, nil
 }
 
-func (tm *IngredientManager) Search(ctx context.Context, query string, filter map[string]interface{}, limit int, page int) ([]*model.Ingredient, error) {
+func (tm *IngredientManager) Search(ctx context.Context, query string, limit int, page int) ([]*model.Ingredient, error) {
 	l, cancel := context.WithTimeout(ctx, 1000*time.Millisecond)
 	defer cancel()
 	load := preloads.GetPreloads(ctx)

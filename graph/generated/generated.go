@@ -68,7 +68,7 @@ type ComplexityRoot struct {
 		Ingredients func(childComplexity int, filter map[string]interface{}, limit *int, page *int) int
 		Recipe      func(childComplexity int, filter map[string]interface{}) int
 		Recipes     func(childComplexity int, filter map[string]interface{}, limit *int, page *int) int
-		Search      func(childComplexity int, filter map[string]interface{}, limit *int, page *int) int
+		Search      func(childComplexity int, query string, limit *int, page *int) int
 	}
 
 	Recipe struct {
@@ -100,7 +100,7 @@ type QueryResolver interface {
 	Ingredients(ctx context.Context, filter map[string]interface{}, limit *int, page *int) ([]*model.Ingredient, error)
 	Recipe(ctx context.Context, filter map[string]interface{}) (*model.Recipe, error)
 	Recipes(ctx context.Context, filter map[string]interface{}, limit *int, page *int) ([]*model.Recipe, error)
-	Search(ctx context.Context, filter map[string]interface{}, limit *int, page *int) ([]model.SearchRecipeResult, error)
+	Search(ctx context.Context, query string, limit *int, page *int) ([]model.SearchRecipeResult, error)
 }
 type SubscriptionResolver interface {
 	Recipe(ctx context.Context) (<-chan *model.Recipe, error)
@@ -286,7 +286,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Search(childComplexity, args["filter"].(map[string]interface{}), args["limit"].(*int), args["page"].(*int)), true
+		return e.complexity.Query.Search(childComplexity, args["query"].(string), args["limit"].(*int), args["page"].(*int)), true
 
 	case "Recipe.id":
 		if e.complexity.Recipe.ID == nil {
@@ -517,7 +517,7 @@ type Query {
   recipe(filter: Map!): Recipe!
   recipes(filter: Map!, limit: Int=12, page:Int=1):[Recipe!]!
 
-  search(filter: Map!, limit: Int=12, page:Int=1):[SearchRecipeResult!]!
+  search(query: String!, limit: Int=12, page:Int=1):[SearchRecipeResult!]!
 }
 
 type Subscription {
@@ -734,15 +734,15 @@ func (ec *executionContext) field_Query_recipes_args(ctx context.Context, rawArg
 func (ec *executionContext) field_Query_search_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 map[string]interface{}
-	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalNMap2map(ctx, tmp)
+	var arg0 string
+	if tmp, ok := rawArgs["query"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["filter"] = arg0
+	args["query"] = arg0
 	var arg1 *int
 	if tmp, ok := rawArgs["limit"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
@@ -1703,7 +1703,7 @@ func (ec *executionContext) _Query_search(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Search(rctx, fc.Args["filter"].(map[string]interface{}), fc.Args["limit"].(*int), fc.Args["page"].(*int))
+		return ec.resolvers.Query().Search(rctx, fc.Args["query"].(string), fc.Args["limit"].(*int), fc.Args["page"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2025,9 +2025,9 @@ func (ec *executionContext) _Recipe_timers(ctx context.Context, field graphql.Co
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*[]string)
+	res := resTmp.([]*string)
 	fc.Result = res
-	return ec.marshalOString2ᚖᚕstringᚄ(ctx, field.Selections, res)
+	return ec.marshalOString2ᚕᚖstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Recipe_timers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2066,9 +2066,9 @@ func (ec *executionContext) _Recipe_steps(ctx context.Context, field graphql.Col
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*[]string)
+	res := resTmp.([]*string)
 	fc.Result = res
-	return ec.marshalOString2ᚖᚕstringᚄ(ctx, field.Selections, res)
+	return ec.marshalOString2ᚕᚖstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Recipe_steps(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2110,9 +2110,9 @@ func (ec *executionContext) _Recipe_imageURL(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Recipe_imageURL(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2198,9 +2198,9 @@ func (ec *executionContext) _Recipe_ingredients(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*[]model.Ingredient)
+	res := resTmp.([]*model.Ingredient)
 	fc.Result = res
-	return ec.marshalNIngredient2ᚖᚕgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐIngredientᚄ(ctx, field.Selections, res)
+	return ec.marshalNIngredient2ᚕᚖgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐIngredientᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Recipe_ingredients(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5097,50 +5097,6 @@ func (ec *executionContext) marshalNIngredient2githubᚗcomᚋottolauncherᚋrec
 	return ec._Ingredient(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNIngredient2ᚕgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐIngredientᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Ingredient) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNIngredient2githubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐIngredient(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
 func (ec *executionContext) marshalNIngredient2ᚕᚖgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐIngredientᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Ingredient) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -5193,10 +5149,6 @@ func (ec *executionContext) marshalNIngredient2ᚖgithubᚗcomᚋottolauncherᚋ
 		return graphql.Null
 	}
 	return ec._Ingredient(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNIngredient2ᚖᚕgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐIngredientᚄ(ctx context.Context, sel ast.SelectionSet, v *[]model.Ingredient) graphql.Marshaler {
-	return ec.marshalNIngredient2ᚕgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐIngredientᚄ(ctx, sel, *v)
 }
 
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
@@ -5775,6 +5727,44 @@ func (ec *executionContext) marshalOString2ᚕstringᚄ(ctx context.Context, sel
 	return ret
 }
 
+func (ec *executionContext) unmarshalOString2ᚕᚖstringᚄ(ctx context.Context, v interface{}) ([]*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2ᚖstring(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOString2ᚕᚖstringᚄ(ctx context.Context, sel ast.SelectionSet, v []*string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2ᚖstring(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
 	if v == nil {
 		return nil, nil
@@ -5789,18 +5779,6 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	}
 	res := graphql.MarshalString(*v)
 	return res
-}
-
-func (ec *executionContext) unmarshalOString2ᚖᚕstringᚄ(ctx context.Context, v interface{}) (*[]string, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOString2ᚖᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v *[]string) graphql.Marshaler {
-	return ec.marshalOString2ᚕstringᚄ(ctx, sel, *v)
 }
 
 func (ec *executionContext) unmarshalOUpdateIngredient2ᚖgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐUpdateIngredient(ctx context.Context, v interface{}) (*model.UpdateIngredient, error) {
