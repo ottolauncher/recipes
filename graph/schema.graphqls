@@ -79,5 +79,5 @@ type Query {
 }
 
 type Subscription {
-    recipe: Recipe!
+    recipe: [Recipe!]
 }

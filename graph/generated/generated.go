@@ -103,7 +103,7 @@ type QueryResolver interface {
 	Search(ctx context.Context, query string, limit *int, page *int) ([]model.SearchRecipeResult, error)
 }
 type SubscriptionResolver interface {
-	Recipe(ctx context.Context) (<-chan *model.Recipe, error)
+	Recipe(ctx context.Context) (<-chan []*model.Recipe, error)
 }
 
 type executableSchema struct {
@@ -521,7 +521,7 @@ type Query {
 }
 
 type Subscription {
-    recipe: Recipe!
+    recipe: [Recipe!]
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -2249,14 +2249,11 @@ func (ec *executionContext) _Subscription_recipe(ctx context.Context, field grap
 		return nil
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return nil
 	}
 	return func(ctx context.Context) graphql.Marshaler {
 		select {
-		case res, ok := <-resTmp.(<-chan *model.Recipe):
+		case res, ok := <-resTmp.(<-chan []*model.Recipe):
 			if !ok {
 				return nil
 			}
@@ -2264,7 +2261,7 @@ func (ec *executionContext) _Subscription_recipe(ctx context.Context, field grap
 				w.Write([]byte{'{'})
 				graphql.MarshalString(field.Alias).MarshalGQL(w)
 				w.Write([]byte{':'})
-				ec.marshalNRecipe2ᚖgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐRecipe(ctx, field.Selections, res).MarshalGQL(w)
+				ec.marshalORecipe2ᚕᚖgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐRecipeᚄ(ctx, field.Selections, res).MarshalGQL(w)
 				w.Write([]byte{'}'})
 			})
 		case <-ctx.Done():
@@ -5687,6 +5684,53 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	}
 	res := graphql.MarshalInt(*v)
 	return res
+}
+
+func (ec *executionContext) marshalORecipe2ᚕᚖgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐRecipeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Recipe) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRecipe2ᚖgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐRecipe(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {

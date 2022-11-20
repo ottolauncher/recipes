@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/dgryski/trifles/uuid"
 	"github.com/ottolauncher/recipes/graph/generated"
 	"github.com/ottolauncher/recipes/graph/model"
 )
@@ -133,8 +134,22 @@ func (r *queryResolver) Search(ctx context.Context, query string, limit *int, pa
 }
 
 // Recipe is the resolver for the recipe field.
-func (r *subscriptionResolver) Recipe(ctx context.Context) (<-chan *model.Recipe, error) {
-	panic(fmt.Errorf("not implemented: Recipe - recipe"))
+func (r *subscriptionResolver) Recipe(ctx context.Context) (<-chan []*model.Recipe, error) {
+	id := uuid.UUIDv4()
+	recipes := make(chan []*model.Recipe, 1)
+
+	go func() {
+		<-ctx.Done()
+		r.mu.Lock()
+		delete(r.RecipeObservers, id)
+		r.mu.Unlock()
+	}()
+	r.mu.Lock()
+
+	r.RecipeObservers[id] = recipes
+	r.mu.Unlock()
+	r.RecipeObservers[id] <- r.Recipes
+	return recipes, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
