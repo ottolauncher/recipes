@@ -17,8 +17,8 @@ type Recipe implements BaseModel {
     id: ID!
     name: String!
     slug: String
-    timers: [String!]!
-    steps:[String!]!
+    timers: [String!]
+    steps:[String!]
     imageURL: String!
     originalURL: String!
     ingredients: [Ingredient!]!
@@ -39,8 +39,8 @@ input UpdateIngredient {
 
 input NewRecipe {
     name: String!
-    timers: [String!]!
-    steps:[String!]!
+    timers: [String!]
+    steps:[String!]
     imageURL: String!
     originalURL: String!
     ingredients: [NewIngredient!]!
@@ -49,8 +49,8 @@ input NewRecipe {
 input UpdateRecipe {
     id: ID!
      name: String!
-    timers: [String!]!
-    steps:[String!]!
+    timers: [String!]
+    steps:[String!]
     imageURL: String!
     originalURL: String!
     ingredients: [UpdateIngredient!]!

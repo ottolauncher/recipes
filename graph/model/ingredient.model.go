@@ -8,4 +8,18 @@ type Ingredient struct {
 	Quantity int     `json:"quantity"`
 }
 
-func (r *Ingredient) IssBaseModel() {}
+func (i *Ingredient) IsBaseModel() {}
+
+func (i *Ingredient) GetID() string {
+	return i.ID
+}
+
+func (i *Ingredient) GetName() string {
+	return i.Name
+}
+
+func (i *Ingredient) GetSlug() *string {
+	return i.Slug
+}
+
+func (i *Ingredient) IsSearchRecipeResult() {}

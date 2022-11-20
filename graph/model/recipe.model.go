@@ -11,4 +11,18 @@ type Recipe struct {
 	Ingredients *[]Ingredient `json:"ingredients" bson:"ingredients"`
 }
 
-func (r *Recipe) IssBaseModel() {}
+func (r *Recipe) IsBaseModel() {}
+
+func (r *Recipe) GetID() string {
+	return r.ID
+}
+
+func (r *Recipe) GetName() string {
+	return r.Name
+}
+
+func (r *Recipe) GetSlug() *string {
+	return r.Slug
+}
+
+func (r *Recipe) IsSearchRecipeResult() {}

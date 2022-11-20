@@ -459,8 +459,8 @@ type Recipe implements BaseModel {
     id: ID!
     name: String!
     slug: String
-    timers: [String!]!
-    steps:[String!]!
+    timers: [String!]
+    steps:[String!]
     imageURL: String!
     originalURL: String!
     ingredients: [Ingredient!]!
@@ -481,8 +481,8 @@ input UpdateIngredient {
 
 input NewRecipe {
     name: String!
-    timers: [String!]!
-    steps:[String!]!
+    timers: [String!]
+    steps:[String!]
     imageURL: String!
     originalURL: String!
     ingredients: [NewIngredient!]!
@@ -491,8 +491,8 @@ input NewRecipe {
 input UpdateRecipe {
     id: ID!
      name: String!
-    timers: [String!]!
-    steps:[String!]!
+    timers: [String!]
+    steps:[String!]
     imageURL: String!
     originalURL: String!
     ingredients: [UpdateIngredient!]!
@@ -2023,14 +2023,11 @@ func (ec *executionContext) _Recipe_timers(ctx context.Context, field graphql.Co
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.([]string)
+	res := resTmp.(*[]string)
 	fc.Result = res
-	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Recipe_timers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2067,14 +2064,11 @@ func (ec *executionContext) _Recipe_steps(ctx context.Context, field graphql.Col
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.([]string)
+	res := resTmp.(*[]string)
 	fc.Result = res
-	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Recipe_steps(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2116,9 +2110,9 @@ func (ec *executionContext) _Recipe_imageURL(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Recipe_imageURL(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2160,9 +2154,9 @@ func (ec *executionContext) _Recipe_originalURL(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Recipe_originalURL(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2204,9 +2198,9 @@ func (ec *executionContext) _Recipe_ingredients(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Ingredient)
+	res := resTmp.(*[]model.Ingredient)
 	fc.Result = res
-	return ec.marshalNIngredient2ᚕᚖgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐIngredientᚄ(ctx, field.Selections, res)
+	return ec.marshalNIngredient2ᚖᚕgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐIngredientᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Recipe_ingredients(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4153,7 +4147,7 @@ func (ec *executionContext) unmarshalInputNewRecipe(ctx context.Context, obj int
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timers"))
-			it.Timers, err = ec.unmarshalNString2ᚕstringᚄ(ctx, v)
+			it.Timers, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4161,7 +4155,7 @@ func (ec *executionContext) unmarshalInputNewRecipe(ctx context.Context, obj int
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("steps"))
-			it.Steps, err = ec.unmarshalNString2ᚕstringᚄ(ctx, v)
+			it.Steps, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4281,7 +4275,7 @@ func (ec *executionContext) unmarshalInputUpdateRecipe(ctx context.Context, obj 
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timers"))
-			it.Timers, err = ec.unmarshalNString2ᚕstringᚄ(ctx, v)
+			it.Timers, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4289,7 +4283,7 @@ func (ec *executionContext) unmarshalInputUpdateRecipe(ctx context.Context, obj 
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("steps"))
-			it.Steps, err = ec.unmarshalNString2ᚕstringᚄ(ctx, v)
+			it.Steps, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4331,15 +4325,11 @@ func (ec *executionContext) _BaseModel(ctx context.Context, sel ast.SelectionSet
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case model.Ingredient:
-		return ec._Ingredient(ctx, sel, &obj)
 	case *model.Ingredient:
 		if obj == nil {
 			return graphql.Null
 		}
 		return ec._Ingredient(ctx, sel, obj)
-	case model.Recipe:
-		return ec._Recipe(ctx, sel, &obj)
 	case *model.Recipe:
 		if obj == nil {
 			return graphql.Null
@@ -4354,15 +4344,11 @@ func (ec *executionContext) _SearchRecipeResult(ctx context.Context, sel ast.Sel
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case model.Recipe:
-		return ec._Recipe(ctx, sel, &obj)
 	case *model.Recipe:
 		if obj == nil {
 			return graphql.Null
 		}
 		return ec._Recipe(ctx, sel, obj)
-	case model.Ingredient:
-		return ec._Ingredient(ctx, sel, &obj)
 	case *model.Ingredient:
 		if obj == nil {
 			return graphql.Null
@@ -4703,16 +4689,10 @@ func (ec *executionContext) _Recipe(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Values[i] = ec._Recipe_timers(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "steps":
 
 			out.Values[i] = ec._Recipe_steps(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "imageURL":
 
 			out.Values[i] = ec._Recipe_imageURL(ctx, field, obj)
@@ -5117,6 +5097,50 @@ func (ec *executionContext) marshalNIngredient2githubᚗcomᚋottolauncherᚋrec
 	return ec._Ingredient(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNIngredient2ᚕgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐIngredientᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Ingredient) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNIngredient2githubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐIngredient(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNIngredient2ᚕᚖgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐIngredientᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Ingredient) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -5169,6 +5193,10 @@ func (ec *executionContext) marshalNIngredient2ᚖgithubᚗcomᚋottolauncherᚋ
 		return graphql.Null
 	}
 	return ec._Ingredient(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNIngredient2ᚖᚕgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐIngredientᚄ(ctx context.Context, sel ast.SelectionSet, v *[]model.Ingredient) graphql.Marshaler {
+	return ec.marshalNIngredient2ᚕgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐIngredientᚄ(ctx, sel, *v)
 }
 
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
@@ -5366,36 +5394,25 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]string, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
+func (ec *executionContext) unmarshalNString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	res, err := graphql.UnmarshalString(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+func (ec *executionContext) marshalNString2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
 	}
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
+	res := graphql.MarshalString(*v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 	}
-
-	return ret
+	return res
 }
 
 func (ec *executionContext) unmarshalNUpdateIngredient2ᚕᚖgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐUpdateIngredientᚄ(ctx context.Context, v interface{}) ([]*model.UpdateIngredient, error) {
@@ -5720,6 +5737,44 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return res
 }
 
+func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
 	if v == nil {
 		return nil, nil
@@ -5734,6 +5789,18 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	}
 	res := graphql.MarshalString(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOString2ᚖᚕstringᚄ(ctx context.Context, v interface{}) (*[]string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOString2ᚖᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v *[]string) graphql.Marshaler {
+	return ec.marshalOString2ᚕstringᚄ(ctx, sel, *v)
 }
 
 func (ec *executionContext) unmarshalOUpdateIngredient2ᚖgithubᚗcomᚋottolauncherᚋrecipesᚋgraphᚋmodelᚐUpdateIngredient(ctx context.Context, v interface{}) (*model.UpdateIngredient, error) {
