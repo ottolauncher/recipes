@@ -43,6 +43,24 @@ func (tm *RecipeManager) Create(ctx context.Context, args model.NewRecipe) (*mod
 		ingredients []*model.Ingredient
 	)
 
+	for _, t := range args.Timers {
+		timers = append(timers, &t)
+	}
+
+	for _, s := range args.Steps {
+		steps = append(steps, &s)
+	}
+
+	for _, i := range args.Ingredients {
+		slg := text.Slugify(i.Name)
+		ingredients = append(ingredients, &model.Ingredient{
+			Name:     args.Name,
+			Slug:     &slg,
+			Type:     i.Type,
+			Quantity: i.Quantity,
+		})
+	}
+
 	Recipe := model.Recipe{
 		Name:        args.Name,
 		Slug:        &slug,
@@ -71,6 +89,23 @@ func (tm *RecipeManager) Update(ctx context.Context, args model.UpdateRecipe) (*
 		ingredients []*model.Ingredient
 	)
 
+	for _, t := range args.Timers {
+		timers = append(timers, &t)
+	}
+
+	for _, s := range args.Steps {
+		steps = append(steps, &s)
+	}
+
+	for _, i := range args.Ingredients {
+		slg := text.Slugify(i.Name)
+		ingredients = append(ingredients, &model.Ingredient{
+			Name:     args.Name,
+			Slug:     &slg,
+			Type:     i.Type,
+			Quantity: i.Quantity,
+		})
+	}
 	Recipe := model.Recipe{
 		Name:        args.Name,
 		Slug:        &slug,
