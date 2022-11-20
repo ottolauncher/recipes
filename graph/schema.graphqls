@@ -1,11 +1,11 @@
 scalar Map
 
-interface RecipeBaseModel {
+interface BaseModel {
     id: ID!
     name: String!
     slug: String
 }
-type Ingredient implements RecipeBaseModel{
+type Ingredient implements BaseModel{
     id: ID!
     name: String!
     slug: String
@@ -13,7 +13,7 @@ type Ingredient implements RecipeBaseModel{
     quantity: Int = 1
 }
 
-type Recipe implements RecipeBaseModel {
+type Recipe implements BaseModel {
     id: ID!
     name: String!
     slug: String
@@ -57,3 +57,27 @@ input UpdateRecipe {
 }
 
 union SearchRecipeResult = Recipe | Ingredient
+
+type Mutation {
+  createIngredient(input: NewIngredient!): Ingredient!
+  updateIngredient(input: UpdateIngredient): Ingredient!
+  deleteIngredient(filter: Map!): Boolean!
+
+  createRecipe(input: NewRecipe!): Recipe!
+  updateRecipe(input: UpdateRecipe!): Recipe!
+  deleteRecipe(filter: Map!): Boolean!
+}
+
+type Query {
+  ingredient(filter: Map!): Ingredient!
+  ingredients(filter: Map!, limit: Int=12, page:Int=1):[Ingredient!]!
+
+  recipe(filter: Map!): Recipe!
+  recipes(filter: Map!, limit: Int=12, page:Int=1):[Recipe!]!
+
+  search(filter: Map!, limit: Int=12, page:Int=1):[SearchRecipeResult!]!
+}
+
+type Subscription {
+    recipe: Recipe!
+}
