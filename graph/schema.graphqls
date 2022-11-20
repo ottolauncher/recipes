@@ -1,0 +1,59 @@
+scalar Map
+
+interface RecipeBaseModel {
+    id: ID!
+    name: String!
+    slug: String
+}
+type Ingredient implements RecipeBaseModel{
+    id: ID!
+    name: String!
+    slug: String
+    type: String!
+    quantity: Int = 1
+}
+
+type Recipe implements RecipeBaseModel {
+    id: ID!
+    name: String!
+    slug: String
+    timers: [String!]!
+    steps:[String!]!
+    imageURL: String!
+    originalURL: String!
+    ingredients: [Ingredient!]!
+}
+
+input NewIngredient {
+    name: String!
+    type: String!
+    quantity: Int!
+}
+
+input UpdateIngredient {
+    id: ID!
+    name: String!
+    type: String!
+    quantity: Int!
+}
+
+input NewRecipe {
+    name: String!
+    timers: [String!]!
+    steps:[String!]!
+    imageURL: String!
+    originalURL: String!
+    ingredients: [Ingredient!]!
+}
+
+input UpdateRecipe {
+    id: ID!
+     name: String!
+    timers: [String!]!
+    steps:[String!]!
+    imageURL: String!
+    originalURL: String!
+    ingredients: [Ingredient!]!
+}
+
+union SearchRecipeResult = Recipe | Ingredient
