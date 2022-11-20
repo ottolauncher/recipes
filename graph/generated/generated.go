@@ -37,6 +37,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Ingredient() IngredientResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 	Subscription() SubscriptionResolver
@@ -89,6 +90,9 @@ type ComplexityRoot struct {
 	}
 }
 
+type IngredientResolver interface {
+	Quantity(ctx context.Context, obj *model.Ingredient) (string, error)
+}
 type MutationResolver interface {
 	CreateIngredient(ctx context.Context, input model.NewIngredient) (*model.Ingredient, error)
 	BulkIngredient(ctx context.Context, input []*model.NewIngredient) (bool, error)
@@ -480,7 +484,7 @@ type Ingredient implements BaseModel{
     name: String!
     slug: String
     type: String!
-    quantity: Int!
+    quantity: String!
 }
 
 type Recipe implements BaseModel {
@@ -497,14 +501,14 @@ type Recipe implements BaseModel {
 input NewIngredient {
     name: String!
     type: String!
-    quantity: Int!
+    quantity: String!
 }
 
 input UpdateIngredient {
     id: ID!
     name: String!
     type: String!
-    quantity: Int!
+    quantity: String!
 }
 
 input NewRecipe {
@@ -1050,7 +1054,7 @@ func (ec *executionContext) _Ingredient_quantity(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Quantity, nil
+		return ec.resolvers.Ingredient().Quantity(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1062,19 +1066,19 @@ func (ec *executionContext) _Ingredient_quantity(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Ingredient_quantity(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Ingredient",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4279,7 +4283,7 @@ func (ec *executionContext) unmarshalInputNewIngredient(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quantity"))
-			it.Quantity, err = ec.unmarshalNInt2int(ctx, v)
+			it.Quantity, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4399,7 +4403,7 @@ func (ec *executionContext) unmarshalInputUpdateIngredient(ctx context.Context, 
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quantity"))
-			it.Quantity, err = ec.unmarshalNInt2int(ctx, v)
+			it.Quantity, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4546,14 +4550,14 @@ func (ec *executionContext) _Ingredient(ctx context.Context, sel ast.SelectionSe
 			out.Values[i] = ec._Ingredient_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 
 			out.Values[i] = ec._Ingredient_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "slug":
 
@@ -4564,15 +4568,28 @@ func (ec *executionContext) _Ingredient(ctx context.Context, sel ast.SelectionSe
 			out.Values[i] = ec._Ingredient_type(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "quantity":
+			field := field
 
-			out.Values[i] = ec._Ingredient_quantity(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Ingredient_quantity(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5335,21 +5352,6 @@ func (ec *executionContext) marshalNIngredient2ᚖgithubᚗcomᚋottolauncherᚋ
 		return graphql.Null
 	}
 	return ec._Ingredient(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
-	res, err := graphql.UnmarshalInt(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
-	res := graphql.MarshalInt(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
 }
 
 func (ec *executionContext) unmarshalNMap2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {

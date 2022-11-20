@@ -1,8 +1,5 @@
 package graph
 
-// This file will be automatically regenerated based on the schema, any resolver implementations
-// will be copied through when generating and any unknown code will be moved to the end.
-
 import (
 	"context"
 	"fmt"
@@ -11,6 +8,14 @@ import (
 	"github.com/ottolauncher/recipes/graph/generated"
 	"github.com/ottolauncher/recipes/graph/model"
 )
+
+// This file will be automatically regenerated based on the schema, any resolver implementations
+// will be copied through when generating and any unknown code will be moved to the end.
+
+// Quantity is the resolver for the quantity field.
+func (r *ingredientResolver) Quantity(ctx context.Context, obj *model.Ingredient) (string, error) {
+	panic(fmt.Errorf("not implemented: Quantity - quantity"))
+}
 
 // CreateIngredient is the resolver for the createIngredient field.
 func (r *mutationResolver) CreateIngredient(ctx context.Context, input model.NewIngredient) (*model.Ingredient, error) {
@@ -149,7 +154,7 @@ func (r *queryResolver) Search(ctx context.Context, query string, limit *int, pa
 	return res, nil
 }
 
-//Recipe is the resolver for the recipe field.
+// Recipe is the resolver for the recipe field.
 func (r *subscriptionResolver) Recipe(ctx context.Context) (<-chan []*model.Recipe, error) {
 	id := uuid.UUIDv4()
 	recipes := make(chan []*model.Recipe, 1)
@@ -168,6 +173,9 @@ func (r *subscriptionResolver) Recipe(ctx context.Context) (<-chan []*model.Reci
 	return recipes, nil
 }
 
+// Ingredient returns generated.IngredientResolver implementation.
+func (r *Resolver) Ingredient() generated.IngredientResolver { return &ingredientResolver{r} }
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
@@ -177,6 +185,7 @@ func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 // Subscription returns generated.SubscriptionResolver implementation.
 func (r *Resolver) Subscription() generated.SubscriptionResolver { return &subscriptionResolver{r} }
 
+type ingredientResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }

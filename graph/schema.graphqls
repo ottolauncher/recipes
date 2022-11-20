@@ -10,7 +10,7 @@ type Ingredient implements BaseModel{
     name: String!
     slug: String
     type: String!
-    quantity: Int!
+    quantity: String!
 }
 
 type Recipe implements BaseModel {
@@ -27,14 +27,14 @@ type Recipe implements BaseModel {
 input NewIngredient {
     name: String!
     type: String!
-    quantity: Int!
+    quantity: String!
 }
 
 input UpdateIngredient {
     id: ID!
     name: String!
     type: String!
-    quantity: Int!
+    quantity: String!
 }
 
 input NewRecipe {

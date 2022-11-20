@@ -5,7 +5,7 @@ type Ingredient struct {
 	Name     string  `json:"name"`
 	Slug     *string `json:"slug,omitempty" bson:"slug,omitempty"`
 	Type     string  `json:"type"`
-	Quantity int     `json:"quantity"`
+	Quantity string  `json:"quantity"`
 }
 
 func (i *Ingredient) IsBaseModel() {}

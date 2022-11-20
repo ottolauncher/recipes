@@ -16,7 +16,7 @@ type SearchRecipeResult interface {
 type NewIngredient struct {
 	Name     string `json:"name"`
 	Type     string `json:"type"`
-	Quantity int    `json:"quantity"`
+	Quantity string `json:"quantity"`
 }
 
 type NewRecipe struct {
@@ -32,7 +32,7 @@ type UpdateIngredient struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
 	Type     string `json:"type"`
-	Quantity int    `json:"quantity"`
+	Quantity string `json:"quantity"`
 }
 
 type UpdateRecipe struct {
