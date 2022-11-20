@@ -43,7 +43,7 @@ input NewRecipe {
     steps:[String!]!
     imageURL: String!
     originalURL: String!
-    ingredients: [Ingredient!]!
+    ingredients: [NewIngredient!]!
 }
 
 input UpdateRecipe {
@@ -53,7 +53,7 @@ input UpdateRecipe {
     steps:[String!]!
     imageURL: String!
     originalURL: String!
-    ingredients: [Ingredient!]!
+    ingredients: [UpdateIngredient!]!
 }
 
 union SearchRecipeResult = Recipe | Ingredient
