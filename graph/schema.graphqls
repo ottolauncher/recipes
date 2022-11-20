@@ -10,7 +10,7 @@ type Ingredient implements BaseModel{
     name: String!
     slug: String
     type: String!
-    quantity: Int = 1
+    quantity: Int!
 }
 
 type Recipe implements BaseModel {
