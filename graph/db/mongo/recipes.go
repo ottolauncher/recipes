@@ -3,11 +3,9 @@ package db
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/ottolauncher/recipes/graph/model"
-	"github.com/ottolauncher/recipes/preloads"
 	"github.com/ottolauncher/recipes/utils/text"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -16,9 +14,9 @@ import (
 )
 
 type IRecipe interface {
-	Create(ctx context.Context, args *model.NewRecipe) (*model.Recipe, error)
+	Create(ctx context.Context, args *model.NewRecipe) error
 	Bulk(ctx context.Context, args []*model.NewRecipe) error
-	Update(ctx context.Context, args *model.UpdateRecipe) (*model.Recipe, error)
+	Update(ctx context.Context, args *model.UpdateRecipe) error
 	Delete(ctx context.Context, filter map[string]interface{}) error
 	Get(ctx context.Context, filter map[string]interface{}) (*model.Recipe, error)
 	All(ctx context.Context, filter map[string]interface{}, limit int, page int) ([]*model.Recipe, error)
@@ -35,52 +33,42 @@ func NewRecipeManager(d *mongo.Database) *RecipeManager {
 }
 
 func (tm *RecipeManager) Bulk(ctx context.Context, args []*model.NewRecipe) error {
-	l, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
+	_, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
-	src := make([]interface{}, len(args))
+	src := []interface{}{}
 
 	for _, arg := range args {
-		slug := text.Slugify(arg.Name)
+		go func(v *model.NewRecipe) {
+			slug := text.Slugify(v.Name)
 
-		var (
-			timers      []*string
-			steps       []*string
-			ingredients []*model.Ingredient
-		)
+			var ingredients []model.Ingredient
 
-		for _, t := range arg.Timers {
-			timers = append(timers, &t)
-		}
+			for _, i := range v.Ingredients {
+				slg := text.Slugify(i.Name)
+				ingredients = append(ingredients, model.Ingredient{
+					ID:       primitive.NewObjectID(),
+					Name:     i.Name,
+					Slug:     &slg,
+					Type:     i.Type,
+					Quantity: i.Quantity,
+				})
+			}
 
-		for _, s := range arg.Steps {
-			steps = append(steps, &s)
-		}
-
-		for _, i := range arg.Ingredients {
-			slg := text.Slugify(i.Name)
-			ingredients = append(ingredients, &model.Ingredient{
-				Name:     arg.Name,
-				Slug:     &slg,
-				Type:     i.Type,
-				Quantity: i.Quantity,
-			})
-		}
-
-		recipe := model.Recipe{
-			Name:        arg.Name,
-			Slug:        &slug,
-			Timers:      timers,
-			Steps:       steps,
-			ImageURL:    arg.ImageURL,
-			OriginalURL: &arg.OriginalURL,
-			Ingredients: ingredients,
-		}
-		src = append(src, recipe)
-
+			input := bson.M{
+				"name":        v.Name,
+				"slug":        &slug,
+				"timers":      v.Timers,
+				"steps":       v.Steps,
+				"imageURL":    v.ImageURL,
+				"originalURL": &v.OriginalURL,
+				"ingredients": ingredients,
+			}
+			src = append(src, input)
+		}(arg)
 	}
 
-	_, err := tm.Col.InsertMany(l, src)
+	_, err := tm.Col.InsertMany(context.TODO(), src)
 	if err != nil {
 		return err
 	}
@@ -89,105 +77,79 @@ func (tm *RecipeManager) Bulk(ctx context.Context, args []*model.NewRecipe) erro
 
 }
 
-func (tm *RecipeManager) Create(ctx context.Context, args *model.NewRecipe) (*model.Recipe, error) {
+func (tm *RecipeManager) Create(ctx context.Context, args *model.NewRecipe) error {
 	l, cancel := context.WithTimeout(ctx, 350*time.Millisecond)
 	defer cancel()
 	slug := text.Slugify(args.Name)
 
-	var (
-		timers      []*string
-		steps       []*string
-		ingredients []*model.Ingredient
-	)
-
-	for _, t := range args.Timers {
-		go func(u string) {
-			timers = append(timers, &u)
-		}(t)
-	}
-
-	for _, s := range args.Steps {
-		go func(u string) {
-			steps = append(steps, &u)
-		}(s)
-	}
-
-	for _, i := range args.Ingredients {
-		go func(v *model.NewIngredient) {
-			slg := text.Slugify(v.Name)
-			ingredients = append(ingredients, &model.Ingredient{
-				ID:       primitive.NewObjectID().Hex(),
-				Name:     v.Name,
-				Slug:     &slg,
-				Type:     v.Type,
-				Quantity: v.Quantity,
-			})
-		}(i)
-	}
-
-	recipe := model.Recipe{
-		Name:        args.Name,
-		Slug:        &slug,
-		Timers:      timers,
-		Steps:       steps,
-		ImageURL:    args.ImageURL,
-		OriginalURL: &args.OriginalURL,
-		Ingredients: ingredients,
-	}
-	log.Println(recipe)
-	res, err := tm.Col.InsertOne(l, recipe)
-	if err != nil {
-		return nil, err
-	}
-	log.Println(res)
-	recipe.ID = res.InsertedID.(primitive.ObjectID).Hex()
-	return &recipe, nil
-}
-
-func (tm *RecipeManager) Update(ctx context.Context, args *model.UpdateRecipe) (*model.Recipe, error) {
-	l, cancel := context.WithTimeout(ctx, 350*time.Millisecond)
-	defer cancel()
-	slug := text.Slugify(args.Name)
-
-	var (
-		timers      []*string
-		steps       []*string
-		ingredients []*model.Ingredient
-	)
-
-	for _, t := range args.Timers {
-		timers = append(timers, &t)
-	}
-
-	for _, s := range args.Steps {
-		steps = append(steps, &s)
-	}
+	var ingredients []model.Ingredient
 
 	for _, i := range args.Ingredients {
 		slg := text.Slugify(i.Name)
-		ingredients = append(ingredients, &model.Ingredient{
-			Name:     args.Name,
+		ingredients = append(ingredients, model.Ingredient{
+			ID:       primitive.NewObjectID(),
+			Name:     i.Name,
 			Slug:     &slg,
 			Type:     i.Type,
 			Quantity: i.Quantity,
 		})
 	}
-	recipe := model.Recipe{
-		Name:        args.Name,
-		Slug:        &slug,
-		Timers:      timers,
-		Steps:       steps,
-		ImageURL:    args.ImageURL,
-		OriginalURL: &args.OriginalURL,
-		Ingredients: ingredients,
+	input := bson.M{
+		"name":        args.Name,
+		"slug":        &slug,
+		"timers":      args.Timers,
+		"steps":       args.Steps,
+		"imageURL":    args.ImageURL,
+		"originalURL": &args.OriginalURL,
+		"ingredients": ingredients,
 	}
 
-	res, err := tm.Col.UpdateByID(l, args.ID, recipe)
+	_, err := tm.Col.InsertOne(l, input)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	recipe.ID = res.UpsertedID.(primitive.ObjectID).Hex()
-	return &recipe, nil
+
+	return nil
+}
+
+func (tm *RecipeManager) Update(ctx context.Context, args *model.UpdateRecipe) error {
+	l, cancel := context.WithTimeout(ctx, 350*time.Millisecond)
+	defer cancel()
+	slug := text.Slugify(args.Name)
+	var ingredients []model.Ingredient
+
+	for _, i := range args.Ingredients {
+		slg := text.Slugify(i.Name)
+		ingredients = append(ingredients, model.Ingredient{
+			Name:     i.Name,
+			Slug:     &slg,
+			Type:     i.Type,
+			Quantity: i.Quantity,
+		})
+	}
+
+	recipe := bson.D{
+		{"$set",
+			bson.D{{"name", args.Name},
+				{"slug", slug},
+				{"timers", args.Timers},
+				{"steps", args.Steps},
+				{"imageURL", args.ImageURL},
+				{"originalURL", &args.OriginalURL},
+				{"ingredients", ingredients},
+			},
+		},
+	}
+
+	id, err := primitive.ObjectIDFromHex(args.ID)
+	if err != nil {
+		return err
+	}
+	_, err = tm.Col.UpdateByID(l, id, recipe)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (tm *RecipeManager) Delete(ctx context.Context, filter map[string]interface{}) error {
@@ -207,36 +169,38 @@ func (tm *RecipeManager) Delete(ctx context.Context, filter map[string]interface
 }
 
 func (tm *RecipeManager) Get(ctx context.Context, filter map[string]interface{}) (*model.Recipe, error) {
-	load := preloads.GetPreloads(ctx)
-	projections := primitive.M{}
-
-	for _, p := range load {
-		projections[p] = 1
-	}
-	opts := options.FindOne().SetProjection(projections)
 	l, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
 	defer cancel()
 
-	var recipe model.Recipe
-	err := tm.Col.FindOne(l, filter, opts).Decode(&recipe)
-	if err != nil {
-		return nil, err
+	var (
+		recipe model.Recipe
+		err    error
+	)
+	if id, ok := filter["id"]; ok {
+		i, err := primitive.ObjectIDFromHex(fmt.Sprintf("%s", id))
+		if err != nil {
+			return nil, err
+		}
+		err = tm.Col.FindOne(l, bson.M{"_id": i}).Decode(&recipe)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+
+		err = tm.Col.FindOne(l, filter).Decode(&recipe)
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	return &recipe, nil
 
 }
 
 func (tm *RecipeManager) All(ctx context.Context, filter map[string]interface{}, limit int, page int) ([]*model.Recipe, error) {
-	l, cancel := context.WithTimeout(ctx, 2000*time.Millisecond)
+	l, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
-	load := preloads.GetPreloads(ctx)
-	projections := primitive.M{}
-	for _, p := range load {
-		projections[p] = 1
-	}
-	opts := options.FindOptions{
-		Projection: projections,
-	}
+	opts := options.FindOptions{}
 	opts.SetLimit(int64(limit))
 
 	var recipes []*model.Recipe
@@ -262,14 +226,6 @@ func (tm *RecipeManager) All(ctx context.Context, filter map[string]interface{},
 func (tm *RecipeManager) Search(ctx context.Context, query string, limit int, page int) ([]*model.Recipe, error) {
 	l, cancel := context.WithTimeout(ctx, 1000*time.Millisecond)
 	defer cancel()
-	load := preloads.GetPreloads(ctx)
-	projections := primitive.M{}
-	for _, p := range load {
-		projections[p] = 1
-	}
-	opts := options.FindOptions{
-		Projection: projections,
-	}
 
 	search := bson.M{
 		"$text": bson.M{
@@ -278,7 +234,7 @@ func (tm *RecipeManager) Search(ctx context.Context, query string, limit int, pa
 	}
 
 	var recipes []*model.Recipe
-	cur, err := tm.Col.Find(l, search, &opts)
+	cur, err := tm.Col.Find(l, search)
 
 	if err != nil {
 		return nil, err

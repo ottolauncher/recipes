@@ -51,7 +51,7 @@ func main() {
 		dao = db.Init()
 	})
 
-	src := dao.Database("recipes")
+	src := dao.Database("recipedb")
 	defer func() {
 		if err := dao.Disconnect(context.TODO()); err != nil {
 			log.Fatal(err)

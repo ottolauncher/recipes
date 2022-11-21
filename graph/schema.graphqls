@@ -59,14 +59,14 @@ input UpdateRecipe {
 union SearchRecipeResult = Recipe | Ingredient
 
 type Mutation {
-  createIngredient(input: NewIngredient!): Ingredient!
+  createIngredient(input: NewIngredient!): Boolean!
   bulkIngredient(input: [NewIngredient!]!): Boolean!
-  updateIngredient(input: UpdateIngredient): Ingredient!
+  updateIngredient(input: UpdateIngredient): Boolean!
   deleteIngredient(filter: Map!): Boolean!
 
-  createRecipe(input: NewRecipe!): Recipe!
+  createRecipe(input: NewRecipe!): Boolean!
   bulkRecipe(input: [NewRecipe!]!): Boolean!
-  updateRecipe(input: UpdateRecipe!): Recipe!
+  updateRecipe(input: UpdateRecipe!): Boolean!
   deleteRecipe(filter: Map!): Boolean!
   
 }

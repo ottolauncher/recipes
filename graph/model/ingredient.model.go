@@ -1,17 +1,19 @@
 package model
 
+import "go.mongodb.org/mongo-driver/bson/primitive"
+
 type Ingredient struct {
-	ID       string  `json:"id" bson:"_id,omitempty"`
-	Name     string  `json:"name"`
-	Slug     *string `json:"slug,omitempty" bson:"slug,omitempty"`
-	Type     string  `json:"type"`
-	Quantity string  `json:"quantity"`
+	ID       primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Name     string             `json:"name"`
+	Slug     *string            `json:"slug,omitempty" bson:"slug,omitempty"`
+	Type     string             `json:"type"`
+	Quantity string             `json:"quantity"`
 }
 
 func (i *Ingredient) IsBaseModel() {}
 
 func (i *Ingredient) GetID() string {
-	return i.ID
+	return i.ID.Hex()
 }
 
 func (i *Ingredient) GetName() string {
