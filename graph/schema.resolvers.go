@@ -17,6 +17,23 @@ func (r *ingredientResolver) ID(ctx context.Context, obj *model.Ingredient) (str
 	return obj.ID.Hex(), nil
 }
 
+// RecipeID is the resolver for the recipeID field.
+func (r *ingredientResolver) RecipeID(ctx context.Context, obj *model.Ingredient) (string, error) {
+	return obj.RecipeID.Hex(), nil
+}
+
+// Pagination is the resolver for the pagination field.
+func (r *ingredientResolver) Pagination(ctx context.Context, obj *model.Ingredient) (*model.PaginationData, error) {
+	return &model.PaginationData{
+		Total:     int(obj.Pagination.Pagination.Total),
+		Page:      int(obj.Pagination.Pagination.Page),
+		PerPage:   int(obj.Pagination.Pagination.PerPage),
+		Prev:      int(obj.Pagination.Pagination.Prev),
+		Next:      int(obj.Pagination.Pagination.Next),
+		TotalPage: int(obj.Pagination.Pagination.TotalPage),
+	}, nil
+}
+
 // CreateIngredient is the resolver for the createIngredient field.
 func (r *mutationResolver) CreateIngredient(ctx context.Context, input model.NewIngredient) (bool, error) {
 	if err := r.IM.Create(ctx, &input); err != nil {
@@ -155,6 +172,27 @@ func (r *recipeResolver) ID(ctx context.Context, obj *model.Recipe) (string, err
 	return obj.ID.Hex(), nil
 }
 
+// IngredientIDS is the resolver for the ingredientIDS field.
+func (r *recipeResolver) IngredientIDS(ctx context.Context, obj *model.Recipe) ([]string, error) {
+	var ids []string
+	for _, i := range obj.IngredientIDs {
+		ids = append(ids, i.Hex())
+	}
+	return ids, nil
+}
+
+// Pagination is the resolver for the pagination field.
+func (r *recipeResolver) Pagination(ctx context.Context, obj *model.Recipe) (*model.PaginationData, error) {
+	return &model.PaginationData{
+		Total:     int(obj.Pagination.Pagination.Total),
+		Page:      int(obj.Pagination.Pagination.Page),
+		PerPage:   int(obj.Pagination.Pagination.PerPage),
+		Prev:      int(obj.Pagination.Pagination.Prev),
+		Next:      int(obj.Pagination.Pagination.Next),
+		TotalPage: int(obj.Pagination.Pagination.TotalPage),
+	}, nil
+}
+
 // Recipe is the resolver for the recipe field.
 func (r *subscriptionResolver) Recipe(ctx context.Context) (<-chan []*model.Recipe, error) {
 	id := uuid.UUIDv4()
@@ -194,13 +232,3 @@ type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type recipeResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *ingredientResolver) Quantity(ctx context.Context, obj *model.Ingredient) (string, error) {
-	return obj.Quantity, nil
-}

@@ -28,6 +28,15 @@ type NewRecipe struct {
 	Ingredients []*NewIngredient `json:"ingredients"`
 }
 
+type PaginationData struct {
+	Total     int `json:"total"`
+	Page      int `json:"page"`
+	PerPage   int `json:"perPage"`
+	Prev      int `json:"prev"`
+	Next      int `json:"next"`
+	TotalPage int `json:"totalPage"`
+}
+
 type UpdateIngredient struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`

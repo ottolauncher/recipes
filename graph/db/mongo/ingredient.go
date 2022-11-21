@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	pager "github.com/gobeam/mongo-go-pagination"
 	"github.com/ottolauncher/recipes/graph/model"
 	"github.com/ottolauncher/recipes/utils/text"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Ingredient interface {
@@ -144,25 +144,22 @@ func (tm *IngredientManager) All(ctx context.Context, filter map[string]interfac
 	l, cancel := context.WithTimeout(ctx, 2000*time.Millisecond)
 	defer cancel()
 
-	opts := options.FindOptions{}
-	opts.SetLimit(int64(limit))
+	matchStage := bson.M{"$match": filter}
+	lookupStage := bson.M{"$lookup": bson.M{"from": "ingredients", "localField": "_id", "foreignField": "recipe_id", "as": "ingredients"}}
 
 	var ingredients []*model.Ingredient
-	cur, err := tm.Col.Find(l, filter, &opts)
+	cur, err := pager.New(tm.Col).Context(l).Limit(int64(limit)).Page(int64(page)).Aggregate(lookupStage, matchStage)
 
 	if err != nil {
 		return nil, err
 	}
-	if err := cur.All(l, &ingredients); err != nil {
-		return nil, err
-	}
 
-	if err := cur.Err(); err != nil {
-		return ingredients, nil
-	}
-	_ = cur.Close(l)
-	if len(ingredients) == 0 {
-		return ingredients, mongo.ErrNoDocuments
+	for _, raw := range cur.Data {
+		var ingredient *model.Ingredient
+		if marshallErr := bson.Unmarshal(raw, &ingredient); marshallErr == nil {
+			ingredient.Pagination = *cur
+			ingredients = append(ingredients, ingredient)
+		}
 	}
 	return ingredients, nil
 }
@@ -171,28 +168,27 @@ func (tm *IngredientManager) Search(ctx context.Context, query string, limit int
 	l, cancel := context.WithTimeout(ctx, 1000*time.Millisecond)
 	defer cancel()
 
-	search := bson.M{
-		"$text": bson.M{
-			"$search": query,
-		},
-	}
+	matchStage := bson.M{"$match": bson.M{"$text": bson.M{"$search": query}}}
+	lookupStage := bson.M{"$lookup": bson.M{"from": "ingredients", "localField": "_id", "foreignField": "recipe_id", "as": "ingredients"}}
 
 	var ingredients []*model.Ingredient
-	cur, err := tm.Col.Find(l, search)
+	cur, err := pager.New(tm.Col).Context(l).Limit(int64(limit)).Page(int64(page)).Aggregate(lookupStage, matchStage)
 
 	if err != nil {
 		return nil, err
 	}
-	if err := cur.All(l, &ingredients); err != nil {
-		return nil, err
+
+	for _, raw := range cur.Data {
+		var ingredient *model.Ingredient
+		if marshallErr := bson.Unmarshal(raw, &ingredient); marshallErr == nil {
+			ingredient.Pagination = *cur
+			ingredients = append(ingredients, ingredient)
+		}
 	}
 
-	if err := cur.Err(); err != nil {
-		return ingredients, nil
-	}
-	_ = cur.Close(l)
 	if len(ingredients) == 0 {
 		return ingredients, mongo.ErrNoDocuments
 	}
+
 	return ingredients, nil
 }

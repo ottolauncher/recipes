@@ -1,13 +1,18 @@
 package model
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	pager "github.com/gobeam/mongo-go-pagination"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type Ingredient struct {
-	ID       primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	Name     string             `json:"name"`
-	Slug     *string            `json:"slug,omitempty" bson:"slug,omitempty"`
-	Type     string             `json:"type"`
-	Quantity string             `json:"quantity"`
+	ID         primitive.ObjectID  `json:"id" bson:"_id,omitempty"`
+	Name       string              `json:"name"`
+	Slug       *string             `json:"slug,omitempty" bson:"slug,omitempty"`
+	Type       string              `json:"type"`
+	Quantity   string              `json:"quantity"`
+	RecipeID   primitive.ObjectID  `json:"recipe_id" bson:"recipe_id,omitempty"`
+	Pagination pager.PaginatedData `json:"pagination,omitempty"`
 }
 
 func (i *Ingredient) IsBaseModel() {}

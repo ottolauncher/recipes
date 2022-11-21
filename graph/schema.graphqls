@@ -11,6 +11,17 @@ type Ingredient implements BaseModel{
     slug: String
     type: String!
     quantity: String!
+    recipeID: ID!
+    pagination: PaginationData!
+}
+
+type PaginationData {
+    total: Int!
+    page: Int!
+    perPage: Int!
+    prev: Int!
+    next: Int!
+    totalPage: Int!
 }
 
 type Recipe implements BaseModel {
@@ -22,6 +33,8 @@ type Recipe implements BaseModel {
     imageURL: String!
     originalURL: String!
     ingredients: [Ingredient!]!
+    ingredientIDS: [ID!]!
+    pagination: PaginationData!
 }
 
 input NewIngredient {
