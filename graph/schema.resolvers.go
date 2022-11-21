@@ -14,7 +14,7 @@ import (
 
 // Quantity is the resolver for the quantity field.
 func (r *ingredientResolver) Quantity(ctx context.Context, obj *model.Ingredient) (string, error) {
-	panic(fmt.Errorf("not implemented: Quantity - quantity"))
+	return obj.Quantity, nil
 }
 
 // CreateIngredient is the resolver for the createIngredient field.

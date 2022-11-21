@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/ottolauncher/recipes/graph/model"
@@ -37,7 +38,7 @@ func (tm *RecipeManager) Bulk(ctx context.Context, args []*model.NewRecipe) erro
 	l, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
 	defer cancel()
 
-	var recipes []*model.Recipe
+	src := make([]interface{}, len(args))
 
 	for _, arg := range args {
 		slug := text.Slugify(arg.Name)
@@ -75,13 +76,10 @@ func (tm *RecipeManager) Bulk(ctx context.Context, args []*model.NewRecipe) erro
 			OriginalURL: &arg.OriginalURL,
 			Ingredients: ingredients,
 		}
-		recipes = append(recipes, &recipe)
+		src = append(src, recipe)
+
 	}
 
-	src := make([]interface{}, len(recipes))
-	for i := range recipes {
-		src = append(src, i)
-	}
 	_, err := tm.Col.InsertMany(l, src)
 	if err != nil {
 		return err
@@ -103,24 +101,31 @@ func (tm *RecipeManager) Create(ctx context.Context, args *model.NewRecipe) (*mo
 	)
 
 	for _, t := range args.Timers {
-		timers = append(timers, &t)
+		go func(u string) {
+			timers = append(timers, &u)
+		}(t)
 	}
 
 	for _, s := range args.Steps {
-		steps = append(steps, &s)
+		go func(u string) {
+			steps = append(steps, &u)
+		}(s)
 	}
 
 	for _, i := range args.Ingredients {
-		slg := text.Slugify(i.Name)
-		ingredients = append(ingredients, &model.Ingredient{
-			Name:     args.Name,
-			Slug:     &slg,
-			Type:     i.Type,
-			Quantity: i.Quantity,
-		})
+		go func(v *model.NewIngredient) {
+			slg := text.Slugify(v.Name)
+			ingredients = append(ingredients, &model.Ingredient{
+				ID:       primitive.NewObjectID().Hex(),
+				Name:     v.Name,
+				Slug:     &slg,
+				Type:     v.Type,
+				Quantity: v.Quantity,
+			})
+		}(i)
 	}
 
-	Recipe := model.Recipe{
+	recipe := model.Recipe{
 		Name:        args.Name,
 		Slug:        &slug,
 		Timers:      timers,
@@ -129,12 +134,14 @@ func (tm *RecipeManager) Create(ctx context.Context, args *model.NewRecipe) (*mo
 		OriginalURL: &args.OriginalURL,
 		Ingredients: ingredients,
 	}
-	res, err := tm.Col.InsertOne(l, Recipe)
+	log.Println(recipe)
+	res, err := tm.Col.InsertOne(l, recipe)
 	if err != nil {
 		return nil, err
 	}
-	Recipe.ID = res.InsertedID.(primitive.ObjectID).Hex()
-	return &Recipe, nil
+	log.Println(res)
+	recipe.ID = res.InsertedID.(primitive.ObjectID).Hex()
+	return &recipe, nil
 }
 
 func (tm *RecipeManager) Update(ctx context.Context, args *model.UpdateRecipe) (*model.Recipe, error) {
@@ -165,7 +172,7 @@ func (tm *RecipeManager) Update(ctx context.Context, args *model.UpdateRecipe) (
 			Quantity: i.Quantity,
 		})
 	}
-	Recipe := model.Recipe{
+	recipe := model.Recipe{
 		Name:        args.Name,
 		Slug:        &slug,
 		Timers:      timers,
@@ -175,12 +182,12 @@ func (tm *RecipeManager) Update(ctx context.Context, args *model.UpdateRecipe) (
 		Ingredients: ingredients,
 	}
 
-	res, err := tm.Col.UpdateByID(l, args.ID, Recipe)
+	res, err := tm.Col.UpdateByID(l, args.ID, recipe)
 	if err != nil {
 		return nil, err
 	}
-	Recipe.ID = res.UpsertedID.(primitive.ObjectID).Hex()
-	return &Recipe, nil
+	recipe.ID = res.UpsertedID.(primitive.ObjectID).Hex()
+	return &recipe, nil
 }
 
 func (tm *RecipeManager) Delete(ctx context.Context, filter map[string]interface{}) error {
@@ -210,12 +217,12 @@ func (tm *RecipeManager) Get(ctx context.Context, filter map[string]interface{})
 	l, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
 	defer cancel()
 
-	var Recipe model.Recipe
-	err := tm.Col.FindOne(l, filter, opts).Decode(&Recipe)
+	var recipe model.Recipe
+	err := tm.Col.FindOne(l, filter, opts).Decode(&recipe)
 	if err != nil {
 		return nil, err
 	}
-	return &Recipe, nil
+	return &recipe, nil
 
 }
 
@@ -232,24 +239,24 @@ func (tm *RecipeManager) All(ctx context.Context, filter map[string]interface{},
 	}
 	opts.SetLimit(int64(limit))
 
-	var Recipes []*model.Recipe
+	var recipes []*model.Recipe
 	cur, err := tm.Col.Find(l, filter, &opts)
 
 	if err != nil {
 		return nil, err
 	}
-	if err := cur.All(l, &Recipes); err != nil {
+	if err := cur.All(l, &recipes); err != nil {
 		return nil, err
 	}
 
 	if err := cur.Err(); err != nil {
-		return Recipes, nil
+		return recipes, nil
 	}
 	_ = cur.Close(l)
-	if len(Recipes) == 0 {
-		return Recipes, mongo.ErrNoDocuments
+	if len(recipes) == 0 {
+		return recipes, mongo.ErrNoDocuments
 	}
-	return Recipes, nil
+	return recipes, nil
 }
 
 func (tm *RecipeManager) Search(ctx context.Context, query string, limit int, page int) ([]*model.Recipe, error) {
@@ -270,22 +277,22 @@ func (tm *RecipeManager) Search(ctx context.Context, query string, limit int, pa
 		},
 	}
 
-	var Recipes []*model.Recipe
+	var recipes []*model.Recipe
 	cur, err := tm.Col.Find(l, search, &opts)
 
 	if err != nil {
 		return nil, err
 	}
-	if err := cur.All(l, &Recipes); err != nil {
+	if err := cur.All(l, &recipes); err != nil {
 		return nil, err
 	}
 
 	if err := cur.Err(); err != nil {
-		return Recipes, nil
+		return recipes, nil
 	}
 	_ = cur.Close(l)
-	if len(Recipes) == 0 {
-		return Recipes, mongo.ErrNoDocuments
+	if len(recipes) == 0 {
+		return recipes, mongo.ErrNoDocuments
 	}
-	return Recipes, nil
+	return recipes, nil
 }
